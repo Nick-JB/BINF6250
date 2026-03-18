@@ -115,7 +115,7 @@ We also spent a good amount of time trying to decide on Node object structure an
 This project was more difficult than I expected it to be. Originally, we tried to implement a tree building method recursively utilizing balding and trimming, but found ourselves confused about how to construct the tree once we had reached a 2x2 matrix. After multiple group meetings we were able to implement an iterative logic for condensing the distance matrix. Overall, this project was not too difficult, but there were definitely a couple spots where it felt like the answer was right there, but I was just short of it. It was extremely rewarding when we were able to finally produce a phyogenetic tree however.
 
 ## Hongyuan Deng 
-Other members' reflections on the project
+Reflecting on this module, our team spent a significant amount of time wrestling with the algorithmic design of the Neighbor-Joining (NJ) function, specifically deciding between a recursive and an iterative approach.However, through deep diving into the implementation,we utilized an iterative "string-building" technique. By dynamically updating the numpy distance matrix and formatting the merged nodes directly into Newick substrings on the fly, we bypassed the deep recursion limits in Python.
 
 ## Victoria Van Berlo
 This project seemed simple, but proved rather confounding the deeper we went. Recursion is a weakness of mine, but my group members helped me to understand and having both methods solidified things for me.
