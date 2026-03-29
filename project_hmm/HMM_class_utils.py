@@ -40,10 +40,10 @@ class State:
                 self.emission_probs[emit] = self.emission_probs[emit] / self.total_emission_prob
     
 class HMM():
-    def __init__(self, name: str, transitions: np.ndarray, betas: dict[State:float], emissions: set = set(), states: list[State] = []):
+    def __init__(self, name: str, transitions: np.matrix, betas: dict[State:float], emissions: set = set(), states: list[State] = []):
         self.name = name
         self.states = states
-        self.transitions = transitions
+        self.transitions = pd.DataFrame(transitions, index=states, columns=states)
         self.emissions = set(emissions)
         self.betas = betas
 
@@ -118,5 +118,7 @@ if __name__ == "__main__":
     transitions = np.matrix([[0.9, 0.1],[0.7,0.3]])
     my_HMM = HMM(name="My_HMM", transitions=transitions, betas={my_state:0.5, my_state2:0.5}, emissions={"A", "B", "C"}, states=[my_state, my_state2])
     print(my_HMM)
+
+    print(my_HMM.transitions[my_state][my_state2]) # column -> row
 
 
