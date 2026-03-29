@@ -1,11 +1,23 @@
 # Introduction
-Description of the project
+Hidden Markov Models (HMMs) can provide probabilistically characterization for a sequence of observations that would otherwise be hard to parse.
+For example predicting the season of the year based on weather patterns. For this project we will be using Viterbi's algorithm to select the most likely hidden state.
 
 # Pseudocode
 Put pseudocode in this box:
 
 ```
-Some pseudocode here
+class State(name, emissions)
+    give state a name
+    give state dict of emit: probability
+
+class HMM(emissions, states)
+    create empty HMM with list of emissions
+    give empty list of state or build from exisiting list
+
+    def add_state(state)
+        add a state to HMM
+        update state emission dict to include emissions missing from emissions list
+        make sure all emissions in state are in HMM emissions list
 ```
 
 # Successes
