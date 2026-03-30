@@ -42,12 +42,11 @@ class State:
                 self.emission_probs[emit] = self.emission_probs[emit] / self.total_emission_prob
     
 class HMM():
-    def __init__(self, name: str, transitions: np.matrix, betas: dict[State:float], emissions: set = set(), states: list[State] = []):
+    def __init__(self, name: str, transitions: np.matrix, betas: dict[State:float], emissions: set, states: list[State]):
         self.name = name  # Name for identification
         self.states = states  # List of state objects in HMM
         self.t_mat = self.build_transition_mat_from_states()  # Transition matrix of states -> states in HMM
-        self.e_mat = self.build_emission_mat_from_states()  # Emission matrix of states -> emissions in HMM
-        self.emissions = set(emissions)
+        self.emissions = set(emissions) # Set of emissions in HMM
         self.betas = betas
 
     def __repr__(self):
@@ -58,6 +57,12 @@ class HMM():
                f"{self.betas}")
     
     def build_transition_mat_from_states(self):
+        """
+        Build a transition matrix from the transition probabilities of states in HMM
+
+        Returns:
+            np.array: Matrix of transitions from states transition dicts (transition[from state][to state])
+        """
         t_mat = [[] for state in self.states]  # Initialize empty list of lists for transition matrix
 
         # Fill transition matrix list with transition probabilities from states in HMM.states
@@ -66,14 +71,6 @@ class HMM():
                 t_mat[row].append(state.transitions[trans.name])
 
         return np.array(t_mat)
-    
-    def build_emission_mat_from_states(self):
-        emat = [[] for state in self.states]  # Initialize empty list of lists for emission matrix
-
-        # Fill emission matrix list with emission probabilities from states in HMM.states
-        pass
-
-
 
     def add_state(self, name:str = None, emissions: list = [], probabilities: list = [], state:State = None):
         """
@@ -121,7 +118,7 @@ class HMM():
         """
         # Initialize empty arrays to hold path probabilities and traceback
         vit = np.zeros((len(self.states), len(observations)))
-        traceback = np.zeros((len(self.states), len(observations)))
+        traceback = np.zeros((len(self.states), len(observations)), dtype=int)
 
         # Set 0 index of trace array rows to index not in states list to recognize as stop signal
         for row in traceback:
@@ -137,20 +134,33 @@ class HMM():
                 options = [state_row[obs-1] + log(self.t_mat[trans_state][state]) + log(self.states[state].emission_probs[observations[obs]])
                            for trans_state, state_row in enumerate(vit)] 
                 row[obs] = max(options)  # Take highest probability of possible paths to this emission
-                traceback[state][obs] = options.index(row[obs]) # Save direction path extended from as index in states list
+                traceback[state][obs] = np.argmax(options) #.index(row[obs]) # Save state path extended from as index in states list
+
+        end_states = [row[-1] for row in vit]  # List of final probabilities in viterbi probability matrix
+        max_path = np.argmax(end_states)  # Get row with highest final probability
+
+        # Start from end of traceback matrix at highest probability path and follow traceback to beginning
+        index = -1
+        trace = max_path
+        print("trace=", trace)
+        print("index =", index)
+        state_path = [max_path]
+        while traceback[trace][index] != len(self.states):
+            trace = traceback[trace][index]
+            state_path.append(trace)
+            index -= 1
+
+        for ind, code in enumerate(state_path):
+            state_path[ind] = self.states[code]
+
+        state_path = list(reversed(state_path))
+
         print(traceback)
-        return vit
-
-
-
-
-                
-
-    
-
+        print(vit)
+        return state_path
 
 if __name__ == "__main__":
-    observations = "AAABBCCABCBCABCB"
+    observations = "AAABBCCCCCBCABCB"
 
     my_name = "my_state"
     my_emissions = ["A", "B", "C"]
