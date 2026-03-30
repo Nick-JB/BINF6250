@@ -1,6 +1,6 @@
 # Introduction
-Hidden Markov Models (HMMs) can provide probabilistically characterization for a sequence of observations that would otherwise be hard to parse.
-For example predicting the season of the year based on weather patterns. For this project we will be using Viterbi's algorithm to select the most likely hidden state.
+Hidden Markov Models (HMMs) can provide probabilistic characterization for a sequence of observations that would otherwise be hard to parse.
+For example predicting the seasons of the year based on weather patterns. For this project we will be using Viterbi's algorithm to select the most likely hidden states underlying a sequence of observations.
 
 # Pseudocode
 Put pseudocode in this box:
@@ -34,4 +34,6 @@ Group leader's reflection on the project
 Other members' reflections on the project
 
 # Generative AI Appendix
-As per the syllabus
+Anthropic. (2026). Claude (claude-sonnet-4-6) [Large language model]. https://claude.ai
+
+AI was utilized to assist in debugging.

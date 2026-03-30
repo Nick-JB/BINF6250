@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 from numbers import Number
 from collections.abc import Iterable
 from math import log
@@ -160,7 +159,7 @@ class HMM():
         return state_path
 
 if __name__ == "__main__":
-    observations = "AAABBCCCCCBCABCB"
+    observations = "BCCCCCAAAABCBABBBBBBBBBACBCABCABACCCCCCCC"
 
     my_name = "my_state"
     my_emissions = ["A", "B", "C"]
@@ -168,7 +167,7 @@ if __name__ == "__main__":
     my_state = State(name="my_state", emissions=my_emissions, probabilities=my_probs, transitions={"my_state":0.7, "my_state2":0.3})
     my_state2 = State(name = "my_state2", emissions=["A", "B", "C"], probabilities=[0.2, 0.7, 0.1], transitions={"my_state2":0.9, "my_state":0.1})
 
-    transitions = np.matrix([[0.9, 0.1],[0.7,0.3]])
+    transitions = np.matrix([[0.7, 0.3],[0.9,0.1]])
     my_HMM = HMM(name="My_HMM", transitions=transitions, betas={my_state:0.5, my_state2:0.5}, emissions={"A", "B", "C"}, states=[my_state, my_state2])
     print(my_HMM)
 
