@@ -41,7 +41,7 @@ class State:
                 self.emission_probs[emit] = self.emission_probs[emit] / self.total_emission_prob
     
 class HMM():
-    def __init__(self, name: str, transitions: np.matrix, betas: dict[State:float], emissions: set, states: list[State]):
+    def __init__(self, name: str, betas: dict[State:float], emissions: set, states: list[State]):
         self.name = name  # Name for identification
         self.states = states  # List of state objects in HMM
         self.t_mat = self.build_transition_mat_from_states()  # Transition matrix of states -> states in HMM
