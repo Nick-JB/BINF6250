@@ -29,7 +29,7 @@ Add Emission
         
 **class HMM(emissions, states)**
 Initialize HMM:
-    Input: name, transition matrix, initial probabilities, emissions, list of states
+    Input: name, initial probabilities, emissions, list of states
     
     Store name
     store states
@@ -67,7 +67,7 @@ Initialize
     Input: observations
     
     create matrix V (state * observation) -> store probabilities
-    cretae matrix traceback (state * observations) -> store paths
+    create matrix traceback (state * observations) -> store paths
     
     for each state:
         V[state][0] = log(initial probability) + log(emission probability of first observation)
