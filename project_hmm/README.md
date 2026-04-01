@@ -113,7 +113,7 @@ We also encountered challenges related to integrating code from different team m
 
 # Personal Reflections
 ## Group Leader
-Group leader's reflection on the project
+This was a fun algorithm to implement. It felt like a comfortable level of challenge, where it required some thought when it came to the implementation, but there wasn't a point where I felt completely stumped. It was difficult to find times that worked for everyone to meet because we had very different availabilities, but overall we were able to make the best of the time that we could scrape together to implement a working Viterbi algorithm. The hardest part of the assignment personally, was deciding how to handle the traceback. The option suggested in lecture was a recursive approach, but there could be scalability issues with stack overflows from long observation sequences. Although, it is probably more memory intensive, we used a traceback matrix to iterate from the back of the matrix and get a Viterbi path, which mimics the recursion of a potential recursive algorithm.
 
 ## Tien Nguyen
 This project was more challenging compared to previous assignments because we were not provided with a notebook or step-by-step instructions to follow. Instead, we had to design our own algorithm and develop the functions from scratch. This required a deeper level of understanding and independent thinking.
