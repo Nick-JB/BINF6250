@@ -175,19 +175,38 @@ class HMM():
         print(traceback)
         print(vit)
         return state_path
+    
+    def forward(self, observations: Iterable) -> np.ndarray:
+        forward_mat = np.ndarray((len(self.states), len(observations)))
+
+        for state, row in enumerate(forward_mat):
+            beta = self.betas[self.states[state]]
+            emission = self.states[state].emission_probs[observations[0]]
+            row[0] = log(beta) + log(emission)
+
+        for obs_ind in range(1, len(observations)):
+            for state, row in enumerate(forward_mat):
+                options = self._get_prev_state_options(obs=obs_ind, observations=observations, mat=forward_mat, mat_row=state)
+                total_prob = np.logaddexp.reduce(options)
+                row[obs_ind] = total_prob
+
+        return forward_mat
+    
+    def backward(self, observations: Iterable) -> np.ndarray:
+        pass
 
 if __name__ == "__main__":
-    observations = "BCCCCCAAAABCBABBBBBBBBBACBCABCABACCCCCCCC"
+    observations = "ABC"
 
     my_name = "my_state"
     my_emissions = ["A", "B", "C"]
     my_probs = [0.3, 0.2, 0.5]
     my_state = State(name="my_state", emissions=my_emissions, probabilities=my_probs, transitions={"my_state":0.7, "my_state2":0.3})
     my_state2 = State(name = "my_state2", emissions=["A", "B", "C"], probabilities=[0.2, 0.7, 0.1], transitions={"my_state2":0.9, "my_state":0.1})
-
-    transitions = np.matrix([[0.7, 0.3],[0.9,0.1]])
     my_HMM = HMM(name="My_HMM", betas={my_state:0.5, my_state2:0.5}, emissions={"A", "B", "C"}, states=[my_state, my_state2])
     print(my_HMM)
 
     print(my_HMM.viterbi(observations=observations))
 
+    fwmat = my_HMM.forward(observations=observations)
+    print(fwmat[0][-1]+fwmat[1][-1])
