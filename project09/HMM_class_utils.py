@@ -192,11 +192,34 @@ class HMM():
 
         return forward_mat
     
+    def _get_future_options(self, obs_ind:int, observations:Iterable, mat:np.ndarray, mat_row:int) -> list:
+        """
+        TODO: Docstring
+        """
+        options = [log(self.t_mat[mat_row][state]) + log(self.states[state].emission_probs[observations[obs_ind]]) + mat[state][obs_ind]
+                   for state, row in enumerate(mat)]
+        """for state, row in mat:
+            log(self.t_mat[mat_row][state]) + log(self.states[mat_row].emission_probs[observations[obs_ind]]) + row[obs_ind]"""
+        return options
+    
     def backward(self, observations: Iterable) -> np.ndarray:
-        pass
+        """
+        TODO: Docstring
+        """
+        backward_mat = np.ndarray((len(self.states), len(observations)))
+        for row in backward_mat:
+            row[-1] = 0
+        for obs_ind in range(len(observations)-1, 0, -1):
+            for state, row in enumerate(backward_mat):
+                options = self._get_future_options(observations=observations, obs_ind=obs_ind, mat=backward_mat, mat_row=state)
+                row[obs_ind-1] = np.logaddexp.reduce(options)
+        
+        return backward_mat
+            
+
 
 if __name__ == "__main__":
-    observations = "ABC"
+    observations = "ABACB"
 
     my_name = "my_state"
     my_emissions = ["A", "B", "C"]
@@ -209,4 +232,8 @@ if __name__ == "__main__":
     print(my_HMM.viterbi(observations=observations))
 
     fwmat = my_HMM.forward(observations=observations)
-    print(fwmat[0][-1]+fwmat[1][-1])
+    bkmat = my_HMM.backward(observations=observations)
+    print(fwmat)
+    print("np.logaddexp(fwmat[0][-1], fwmat[1][-1])", np.logaddexp(fwmat[0][-1], fwmat[1][-1]))
+    print(bkmat)
+    print("np.logaddexp(bkmat[0][-1], bkmat[1][-1])", np.logaddexp(bkmat[0][0], bkmat[1][0]))
