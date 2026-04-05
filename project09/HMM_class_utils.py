@@ -215,6 +215,26 @@ class HMM():
                 row[obs_ind-1] = np.logaddexp.reduce(options)
         
         return backward_mat
+
+    def posterier_decoding(self, observations: Iterable):
+        """
+        Calculate the most likely observation for a given state using the forward-backward algorithm
+        """
+        #Create the forward and backward matrices
+        forward_mat = self.forward(observations)
+        backward_mat = self.backward(observations)
+
+        # Calculate the log
+        log_prob = np.logaddexp.reduce(forward_mat[:, -1])
+
+        #Create posterier matrix
+        posterier_mat = forward_mat + backward_mat - log_prob
+
+        # Determine the most likely state at a given position
+        state_idx = np.argmax(posterier_mat, axis=0)
+        state_path = [self.states[i] for i in state_idx]
+
+        return posterier_mat. state_path
             
 
 
