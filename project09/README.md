@@ -109,10 +109,10 @@ POSTERIOR_DECODING(observations):
 ```
 
 # Successes
-Description of the team's learning points
+One of our biggest strengths was that our team developed a strong understanding of the underlying logic behind the Forward, Backward, and Posterior Decoding algorithms. Building on our work from the Viterbi implementation, we were able to clearly visualize how the probabilities are processed through the model in both directions and how combining these perspectives provides a more complete picture of state likelihoods. We became comfortable working in log space and understood why functions like logaddexp are necessary for numerical stability. We also maintained the level of communication we had last week, which helped us all stay up to date with progress any of us made despite the busy schedules we all had. 
 
 # Struggles
-Description of the stumbling blocks the team experienced
+One of the main challenges we faced was coordinating time to meet as a group. The busy nature of our scheudles made it hard to find a time where we all could meet, but we still did our best through frequent updates and messages on teams. Additionally, translating the mathematical concepts and pseudocode into working Python code proved to be more confusing than we expected. While we understood the concepts and had working code that we checked through careful debugging, we found ourselves stumped trying to make sense of the results. Eventually, we did verify our results and found it was working as intented so that wasn't too big of a hurdle for us.
 
 # Personal Reflections
 ## Group Leader
@@ -121,5 +121,8 @@ Group leader's reflection on the project
 ## Other member
 Other members' reflections on the project
 
+## Shameem Shahib
+Compared to the first part of the HMM, I found the concepts for the forward and backward algorithms to be a little easier to visualize and understand. Posterier decoding was interesting to tackle as well, and I found it to be enriching to put the forward and backward together. Working with my group continued to be a big strength. Being able to talk through the algorithm and troubleshoot together made a big difference in my learning. Overall, I'm glad with how progress is going, and the final code we put together for this week.
+
 # Generative AI Appendix
-As per the syllabus
+Claude Sonnet 4.6 was used to check our logic in our code and ensure our results matched the logic behind the algorithm.
