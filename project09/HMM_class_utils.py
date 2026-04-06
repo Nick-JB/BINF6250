@@ -3,17 +3,18 @@ from numbers import Number
 from collections.abc import Iterable
 from math import log
 
+
 class State:
     """Hidden state for HMM"""
-    def __init__(self, name:str, emissions: list, probabilities: list[Number], transitions:dict[str:float]):
+    def __init__(self, name: str, emissions: list, probabilities: list[Number], transitions: dict[str:float]):
         self.name = name
-        self.emissions = set(emissions) # Create a set of emission labels for faster future checks
+        self.emissions = set(emissions)  # Create a set of emission labels for faster future checks
         self.emission_probs = dict(zip(emissions, probabilities))  # Create state emission: probabilities pairs from input
         self.transitions = transitions
         self.total_emission_prob = sum(probabilities)  # Save sum of emission probabilities
         if self.total_emission_prob != 1:  # Confirm emission probabilities sum to 1, else raise error
             raise ValueError("Emission probabilities do not sum to 1")
-        
+
     def __repr__(self):
         return self.name
 
@@ -31,30 +32,27 @@ class State:
         """
         self.emissions.add(emission)
         self.emission_probs[emission] = probability  # Create new emission: probability pair
-        self.total_emission_prob += probability # Update sum of emission probabilities
+        self.total_emission_prob += probability  # Update sum of emission probabilities
 
         # Check if emission probabilities are still equal to 1, else get relative probabilities
-        if self.total_emission_prob > 1: 
+        if self.total_emission_prob > 1:
             print(f"\nWARNING: sum of State: {self.name} emission probabilities has exceeded 0.\n"
                   f"Refactoring to maintain relative probabilities with sum of 1\n")
             for emit in self.emissions:
                 self.emission_probs[emit] = self.emission_probs[emit] / self.total_emission_prob
-    
+
+
 class HMM():
     def __init__(self, name: str, betas: dict[State:float], emissions: set, states: list[State]):
         self.name = name  # Name for identification
         self.states = states  # List of state objects in HMM
         self.t_mat = self.build_transition_mat_from_states()  # Transition matrix of states -> states in HMM
-        self.emissions = set(emissions) # Set of emissions in HMM
+        self.emissions = set(emissions)  # Set of emissions in HMM
         self.betas = betas
 
     def __repr__(self):
-        return(f"{self.name}\n"
-               f"{self.emissions}\n"
-               f"{self.states}\n"
-               f"{self.t_mat}\n"
-               f"{self.betas}")
-    
+        return (f"{self.name}\n{self.emissions}\n{self.states}\n{self.t_mat}\n{self.betas}")
+
     def build_transition_mat_from_states(self):
         """
         Build a transition matrix from the transition probabilities of states in HMM
@@ -71,7 +69,7 @@ class HMM():
 
         return np.array(t_mat)
 
-    def add_state(self, name:str = None, emissions: list = [], probabilities: list = [], state:State = None):
+    def add_state(self, name: str = None, emissions: list = [], probabilities: list = [], state: State = None):
         """
         Add a State to the HMM either by providing a State or arguments for a state
 
@@ -82,30 +80,30 @@ class HMM():
             state (State): existing State object to add instead of creating new from other arguments
 
         Examples:
-            HMM.add_state(name = "my_state", emissions = ["A", "B", "C"], probabilities = [0.2, 0.3, 0.5])  
+            HMM.add_state(name = "my_state", emissions = ["A", "B", "C"], probabilities = [0.2, 0.3, 0.5])
             HMM.add_state(state = existing_state)
         """
-        if state is None: # Check if pre-existing State given
+        if state is None:  # Check if pre-existing State given
 
             # Check if name provided to create new State, else raise ValueError
             if name is None:
                 raise ValueError("No name given to create new State object from arguments")
             state = State(name=name, emissions=emissions, probabilities=probabilities)
 
-        self.states.append(state) # Add state to HMM list of States
+        self.states.append(state)  # Add state to HMM list of States
 
         # Compare state emission to HMM emissions and add missing state emissions to HMM
         for emission in state.emissions:
-            if not emission in self.emissions:
+            if emission not in self.emissions:
                 self.emissions.add(emission)
 
         # Compare HMM emissions to state emissions and add missing HMM emissions with probability 0
         for emission in self.emissions:
             for state in self.states:
-                if not emission in state.emissions:
+                if emission not in state.emissions:
                     state.add_emission(emission=emission, probability=0)
 
-    def _get_prev_state_options(self, obs:int, observations: Iterable, mat:np.ndarray, mat_row:int) -> list:
+    def _get_prev_state_options(self, obs: int, observations: Iterable, mat: np.ndarray, mat_row: int) -> list:
         """
         Create a list of previous path * transition * emission probabilities for each potential state transition
 
@@ -120,10 +118,10 @@ class HMM():
         """
 
         options = [state_row[obs-1] + log(self.t_mat[trans_state][mat_row]) + log(self.states[mat_row].emission_probs[observations[obs]])
-                    for trans_state, state_row in enumerate(mat)]
-        
+                   for trans_state, state_row in enumerate(mat)]
+
         return options
-    
+
     def viterbi(self, observations: Iterable) -> list[State]:
         """
         Calculate most likely state at each observation
@@ -144,14 +142,14 @@ class HMM():
 
         # Set 0 index of probability array rows to beta probability * emission probability
         for state, row in enumerate(vit):
-            row[0]=log(self.betas[self.states[state]]) + log(self.states[state].emission_probs[observations[0]])
+            row[0] = log(self.betas[self.states[state]]) + log(self.states[state].emission_probs[observations[0]])
 
         # Populate each row at each position with max probability of cumulative prob * transition prob * emission prob
         for obs in range(1, len(observations)):
             for state, row in enumerate(vit):
                 options = self._get_prev_state_options(obs=obs, observations=observations, mat=vit, mat_row=state)
                 row[obs] = max(options)  # Take highest probability of possible paths to this emission
-                traceback[state][obs] = np.argmax(options) #.index(row[obs]) # Save state path extended from as index in states list
+                traceback[state][obs] = np.argmax(options)  # Save state path extended from as index in states list
 
         end_states = [row[-1] for row in vit]  # List of final probabilities in viterbi probability matrix
         max_path = np.argmax(end_states)  # Get row with highest final probability
@@ -175,7 +173,7 @@ class HMM():
         print(traceback)
         print(vit)
         return state_path
-    
+
     def forward(self, observations: Iterable) -> np.ndarray:
         forward_mat = np.ndarray((len(self.states), len(observations)))
 
@@ -191,8 +189,8 @@ class HMM():
                 row[obs_ind] = total_prob
 
         return forward_mat
-    
-    def _get_future_options(self, obs_ind:int, observations:Iterable, mat:np.ndarray, mat_row:int) -> list:
+
+    def _get_future_options(self, obs_ind: int, observations: Iterable, mat: np.ndarray, mat_row: int) -> list:
         """
         TODO: Docstring
         """
@@ -201,7 +199,7 @@ class HMM():
         """for state, row in mat:
             log(self.t_mat[mat_row][state]) + log(self.states[mat_row].emission_probs[observations[obs_ind]]) + row[obs_ind]"""
         return options
-    
+
     def backward(self, observations: Iterable) -> np.ndarray:
         """
         TODO: Docstring
@@ -213,29 +211,28 @@ class HMM():
             for state, row in enumerate(backward_mat):
                 options = self._get_future_options(observations=observations, obs_ind=obs_ind, mat=backward_mat, mat_row=state)
                 row[obs_ind-1] = np.logaddexp.reduce(options)
-        
+
         return backward_mat
 
     def posterier_decoding(self, observations: Iterable):
         """
         Calculate the most likely observation for a given state using the forward-backward algorithm
         """
-        #Create the forward and backward matrices
+        # Create the forward and backward matrices
         forward_mat = self.forward(observations)
         backward_mat = self.backward(observations)
 
         # Calculate the log
         log_prob = np.logaddexp.reduce(forward_mat[:, -1])
 
-        #Create posterier matrix
+        # Create posterier matrix
         posterier_mat = forward_mat + backward_mat - log_prob
 
         # Determine the most likely state at a given position
         state_idx = np.argmax(posterier_mat, axis=0)
         state_path = [self.states[i] for i in state_idx]
 
-        return posterier_mat. state_path
-            
+        return posterier_mat, state_path
 
 
 if __name__ == "__main__":
@@ -244,9 +241,9 @@ if __name__ == "__main__":
     my_name = "my_state"
     my_emissions = ["A", "B", "C"]
     my_probs = [0.3, 0.2, 0.5]
-    my_state = State(name="my_state", emissions=my_emissions, probabilities=my_probs, transitions={"my_state":0.7, "my_state2":0.3})
-    my_state2 = State(name = "my_state2", emissions=["A", "B", "C"], probabilities=[0.2, 0.7, 0.1], transitions={"my_state2":0.9, "my_state":0.1})
-    my_HMM = HMM(name="My_HMM", betas={my_state:0.5, my_state2:0.5}, emissions={"A", "B", "C"}, states=[my_state, my_state2])
+    my_state = State(name="my_state", emissions=my_emissions, probabilities=my_probs, transitions={"my_state": 0.7, "my_state2": 0.3})
+    my_state2 = State(name="my_state2", emissions=["A", "B", "C"], probabilities=[0.2, 0.7, 0.1], transitions={"my_state2": 0.9, "my_state": 0.1})
+    my_HMM = HMM(name="My_HMM", betas={my_state: 0.5, my_state2: 0.5}, emissions={"A", "B", "C"}, states=[my_state, my_state2])
     print(my_HMM)
 
     print(my_HMM.viterbi(observations=observations))
@@ -257,3 +254,11 @@ if __name__ == "__main__":
     print("np.logaddexp(fwmat[0][-1], fwmat[1][-1])", np.logaddexp(fwmat[0][-1], fwmat[1][-1]))
     print(bkmat)
     print("np.logaddexp(bkmat[0][-1], bkmat[1][-1])", np.logaddexp(bkmat[0][0], bkmat[1][0]))
+    post_mat, post_path = my_HMM.posterier_decoding(observations=observations)
+    print(post_mat)
+    print(post_path)
+
+    log_prob_fw = np.logaddexp.reduce(fwmat[:, -1])
+    log_prob_bk = np.logaddexp.reduce(bkmat[:, 0])
+    print("log_P from forward: ", log_prob_fw)
+    print("log_P from backward:", log_prob_bk)
