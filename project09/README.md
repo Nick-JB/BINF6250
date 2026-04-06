@@ -116,7 +116,7 @@ One of the main challenges we faced was coordinating time to meet as a group. Th
 
 # Personal Reflections
 ## Group Leader
-Group leader's reflection on the project
+This week's assignment felt a little bit more straightforward than last week's. The forward matrix feels intuitive, while the backward matrix took a little more time to put together. Given the time of year, everyone is also very busy which makes meeting difficult, but we managed to work around these planning hurdles to complete our assignment.
 
 ## Other member
 Other members' reflections on the project
