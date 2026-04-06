@@ -116,7 +116,7 @@ class HMM():
         Returns:
             list: list of potential path probabilities
         """
-
+        # For each possible path probability into the given state at the current observation store that cumulative probability in a list of paths
         options = [state_row[obs-1] + log(self.t_mat[trans_state][mat_row]) + log(self.states[mat_row].emission_probs[observations[obs]])
                    for trans_state, state_row in enumerate(mat)]
 
@@ -175,13 +175,25 @@ class HMM():
         return state_path
 
     def forward(self, observations: Iterable) -> np.ndarray:
+        """
+        Create forward matrix from sequence of observations
+
+        Args:
+            observations (Iterable): sequence of observations
+
+        Returns:
+            np.ndarray: matrix of cumulative path probabilities for each state at each position
+        """
+        # Initialize empty forward matrix with a row for each state and column for each observation
         forward_mat = np.ndarray((len(self.states), len(observations)))
 
+        # Set each row in first column equal to log(beta * emission) for corresponding state
         for state, row in enumerate(forward_mat):
             beta = self.betas[self.states[state]]
             emission = self.states[state].emission_probs[observations[0]]
             row[0] = log(beta) + log(emission)
 
+        # For each observation and each possible state at that observation get the cumulative path probabilities into that state
         for obs_ind in range(1, len(observations)):
             for state, row in enumerate(forward_mat):
                 options = self._get_prev_state_options(obs=obs_ind, observations=observations, mat=forward_mat, mat_row=state)
@@ -192,21 +204,41 @@ class HMM():
 
     def _get_future_options(self, obs_ind: int, observations: Iterable, mat: np.ndarray, mat_row: int) -> list:
         """
-        TODO: Docstring
+        Create a list of cumulative path probabilities for a backward matrix
+
+        Args:
+            obs_ind (int): index of observation in observation sequence
+            observations (Iterable): sequence of observations
+            mat (np.ndarray): current backward matrix
+            mat_row (int): current row of matrix being calculated for position obs_ind
+
+        Returns:
+            list: list of cumulative path probabilities up to current row and position
         """
+        # For each possible sum of current path probability, transition probability, and emission probability, create a corresponding element in a list of path options
         options = [log(self.t_mat[mat_row][state]) + log(self.states[state].emission_probs[observations[obs_ind]]) + mat[state][obs_ind]
                    for state, row in enumerate(mat)]
-        """for state, row in mat:
-            log(self.t_mat[mat_row][state]) + log(self.states[mat_row].emission_probs[observations[obs_ind]]) + row[obs_ind]"""
+
         return options
 
     def backward(self, observations: Iterable) -> np.ndarray:
         """
-        TODO: Docstring
+        Create backward matrix from sequence of observations
+
+        Args:
+            observations (Iterable): sequence of observations
+
+        Returns:
+            np.ndarray: backward matrix
         """
+        # Initialize backward matrix
         backward_mat = np.ndarray((len(self.states), len(observations)))
+
+        # Set last column values as 0 (log space equivalent of 1)
         for row in backward_mat:
             row[-1] = 0
+
+        # Iterate from back of observation sequence to front, populating array
         for obs_ind in range(len(observations)-1, 0, -1):
             for state, row in enumerate(backward_mat):
                 options = self._get_future_options(observations=observations, obs_ind=obs_ind, mat=backward_mat, mat_row=state)
@@ -217,6 +249,12 @@ class HMM():
     def posterier_decoding(self, observations: Iterable):
         """
         Calculate the most likely observation for a given state using the forward-backward algorithm
+
+        Args:
+            observations (Iterable): sequence of observations
+   
+        Returns:
+            (np.ndarray, list): posterior decoding matrix and list of most likely state at each observation position
         """
         # Create the forward and backward matrices
         forward_mat = self.forward(observations)
