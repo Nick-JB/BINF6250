@@ -118,8 +118,9 @@ One of the main challenges we faced was coordinating time to meet as a group. Th
 ## Group Leader
 This week's assignment felt a little bit more straightforward than last week's. The forward matrix feels intuitive, while the backward matrix took a little more time to put together. Given the time of year, everyone is also very busy which makes meeting difficult, but we managed to work around these planning hurdles to complete our assignment.
 
-## Other member
-Other members' reflections on the project
+## Tien Nguyen
+This project felt more manageable than Part 1 since the class structure was already in place, which let me focus on understanding and implementing the algorithms rather than designing the model from scratch. It helped me see how each algorithm builds on the previous one, and how the same class can be extended incrementally.
+We also started building a portfolio notebook that documents both parts of the project, though it is still a draft for now and will be expanded as we complete the remaining parts.
 
 ## Shameem Shahib
 Compared to the first part of the HMM, I found the concepts for the forward and backward algorithms to be a little easier to visualize and understand. Posterier decoding was interesting to tackle as well, and I found it to be enriching to put the forward and backward together. Working with my group continued to be a big strength. Being able to talk through the algorithm and troubleshoot together made a big difference in my learning. Overall, I'm glad with how progress is going, and the final code we put together for this week.
