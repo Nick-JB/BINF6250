@@ -3,6 +3,8 @@ from numbers import Number
 from collections.abc import Iterable
 from math import log
 
+from project09.HMM_notebook import backward_mat
+
 
 class State:
     """Hidden state for HMM"""
@@ -40,6 +42,7 @@ class State:
                   f"Refactoring to maintain relative probabilities with sum of 1\n")
             for emit in self.emissions:
                 self.emission_probs[emit] = self.emission_probs[emit] / self.total_emission_prob
+            self.total_emission_prob = sum(self.emission_probs.values())
 
 
 class HMM():
@@ -49,9 +52,35 @@ class HMM():
         self.t_mat = self.build_transition_mat_from_states()  # Transition matrix of states -> states in HMM
         self.emissions = set(emissions)  # Set of emissions in HMM
         self.betas = betas
+        self._synchronize_emission()
 
     def __repr__(self):
         return (f"{self.name}\n{self.emissions}\n{self.states}\n{self.t_mat}\n{self.betas}")
+
+
+    @staticmethod
+    def _safe_log(x:float) -> float:
+        """
+        Return log(x) if x > 0, else -inf
+        """
+        if x <= 0:
+            return float("-inf")
+        return log(x)
+
+    def _synchronize_emission(self):
+        """
+        Ensure every state has every emission in the MM.
+        Missing emission are added with probability 0
+        """
+        for state in self.states:
+            for emission in state.emissions:
+                self.emissions.add(emission)
+
+        for emission in self.emissions:
+            for state in self.states:
+                if emission not in state.emissions:
+                    state.emissions.add(emission)
+                    state.emission_probs[emission] = 0.0
 
     def build_transition_mat_from_states(self):
         """
@@ -67,9 +96,9 @@ class HMM():
             for trans in self.states:
                 t_mat[row].append(state.transitions[trans.name])
 
-        return np.array(t_mat)
+        return np.array(t_mat, dtype=float)
 
-    def add_state(self, name: str = None, emissions: list = [], probabilities: list = [], state: State = None):
+    def add_state(self, name: str = None, emissions: list = None, probabilities: list = None, transitions: dict[str, float] = None, state: State = None):
         """
         Add a State to the HMM either by providing a State or arguments for a state
 
@@ -83,25 +112,21 @@ class HMM():
             HMM.add_state(name = "my_state", emissions = ["A", "B", "C"], probabilities = [0.2, 0.3, 0.5])
             HMM.add_state(state = existing_state)
         """
-        if state is None:  # Check if pre-existing State given
+        if emissions is None:
+            emissions = []
+        if probabilities is None:
+            probabilities = []
 
-            # Check if name provided to create new State, else raise ValueError
+        if state is None:
             if name is None:
-                raise ValueError("No name given to create new State object from arguments")
-            state = State(name=name, emissions=emissions, probabilities=probabilities)
+                raise ValueError("No name given to create new State object from argument")
+            if transitions is None:
+                raise ValueError("No name given to create new State object from argument")
+            state = State(name=name, emissions=emissions, probabilities=probabilities, transitions=transitions)
 
-        self.states.append(state)  # Add state to HMM list of States
-
-        # Compare state emission to HMM emissions and add missing state emissions to HMM
-        for emission in state.emissions:
-            if emission not in self.emissions:
-                self.emissions.add(emission)
-
-        # Compare HMM emissions to state emissions and add missing HMM emissions with probability 0
-        for emission in self.emissions:
-            for state in self.states:
-                if emission not in state.emissions:
-                    state.add_emission(emission=emission, probability=0)
+        self.states.append(state)
+        self._synchronize_emission()
+        self.t_mat = self.build_transition_mat_from_states()
 
     def _get_prev_state_options(self, obs: int, observations: Iterable, mat: np.ndarray, mat_row: int) -> list:
         """
@@ -133,7 +158,7 @@ class HMM():
             list: list of which state is most likely at each observation
         """
         # Initialize empty arrays to hold path probabilities and traceback
-        vit = np.zeros((len(self.states), len(observations)))
+        vit = np.full((len(self.states), len(observations)), float("-inf"))
         traceback = np.zeros((len(self.states), len(observations)), dtype=int)
 
         # Set 0 index of trace array rows to index not in states list to recognize as stop signal
@@ -142,7 +167,7 @@ class HMM():
 
         # Set 0 index of probability array rows to beta probability * emission probability
         for state, row in enumerate(vit):
-            row[0] = log(self.betas[self.states[state]]) + log(self.states[state].emission_probs[observations[0]])
+            row[0] = self._safe_log(self.betas[self.states[state]]) + self._safe_log(self.states[state].emission_probs[observations[0]])
 
         # Populate each row at each position with max probability of cumulative prob * transition prob * emission prob
         for obs in range(1, len(observations)):
@@ -185,20 +210,19 @@ class HMM():
             np.ndarray: matrix of cumulative path probabilities for each state at each position
         """
         # Initialize empty forward matrix with a row for each state and column for each observation
-        forward_mat = np.ndarray((len(self.states), len(observations)))
+        forward_mat = np.full((len(self.states), len(observations)), float("-inf"))
 
         # Set each row in first column equal to log(beta * emission) for corresponding state
         for state, row in enumerate(forward_mat):
             beta = self.betas[self.states[state]]
             emission = self.states[state].emission_probs[observations[0]]
-            row[0] = log(beta) + log(emission)
+            row[0] = self._safe_log(beta) + self._safe_log(emission)
 
         # For each observation and each possible state at that observation get the cumulative path probabilities into that state
         for obs_ind in range(1, len(observations)):
             for state, row in enumerate(forward_mat):
                 options = self._get_prev_state_options(obs=obs_ind, observations=observations, mat=forward_mat, mat_row=state)
-                total_prob = np.logaddexp.reduce(options)
-                row[obs_ind] = total_prob
+                row[obs_ind] = np.logaddexp.reduce(options)
 
         return forward_mat
 
@@ -232,11 +256,11 @@ class HMM():
             np.ndarray: backward matrix
         """
         # Initialize backward matrix
-        backward_mat = np.ndarray((len(self.states), len(observations)))
+        backward_mat = np.full((len(self.states), len(observations)), float("-inf"))
 
         # Set last column values as 0 (log space equivalent of 1)
         for row in backward_mat:
-            row[-1] = 0
+            row[-1] = 0.0
 
         # Iterate from back of observation sequence to front, populating array
         for obs_ind in range(len(observations)-1, 0, -1):
@@ -252,7 +276,7 @@ class HMM():
 
         Args:
             observations (Iterable): sequence of observations
-   
+
         Returns:
             (np.ndarray, list): posterior decoding matrix and list of most likely state at each observation position
         """
@@ -271,6 +295,136 @@ class HMM():
         state_path = [self.states[i] for i in state_idx]
 
         return posterier_mat, state_path
+
+    def _expectation_values(self, observations: Iterable):
+        "Compute shared E-step quantities for one sequence."
+
+        observations = list(observations)
+        n_states = len(self.states)
+        T = len(observations)
+
+        forward_mat = self.forward(observations)
+        backward_mat = self.backward(observations)
+        log_prob = np.logaddexp.reduce(forward_mat[:, -1])
+
+        gamma = np.exp(forward_mat + backward_mat - log_prob)
+
+        xi = np.zeros((T-1, n_states, n_states), dtype=float)
+        for t in range (T-1):
+            for i in range(n_states):
+                for j in range(n_states):
+                    log_xi = (
+                            forward_mat[i, t]
+                            + self._safe_log(self.t_mat[i, j])
+                            + self._safe_log(self.states[j].emission_probs[observations[t+1]])
+                            + backward_mat[j, t+1]
+                            - log_prob)
+                    xi[t, i, j] = np.exp(log_xi)
+
+        return forward_mat, backward_mat, log_prob, gamma, xi
+
+    def sequence_log_likelihood(self, observations: Iterable) -> float:
+        " Compute log-likelihood of a sequence of observations"
+        _, _, log_prob, _, _ = self._expectation_values(observations)
+        return log_prob
+
+    def gamma_matrix(self, observations: Iterable) -> np.ndarray:
+        """return gamma matrix"""
+        _, _, _, gamma, _ = self._expectation_values(observations)
+        return gamma
+
+    def xi_tensor(self, observations: Iterable) -> np.ndarray:
+        """Return xi matrix"""
+        _, _, _, _,xi = self._expectation_values(observations)
+        return xi
+
+    def posterior_decoding(self, observations: Iterable): #new approach
+        "Compute posterior decoding using gamma matrix"
+
+        gamma = self.gamma_matrix(observations)
+        posterior_mat = np.where(gamma > 0, np.log(gamma), float("-inf"))
+
+        state_idx = np.argmax(posterior_mat, axis=0)
+        state_path = [self.states[i] for i in state_idx]
+
+        return posterior_mat, state_path
+
+    def baum_welch(self, sequences, max_iter=100, tol=1e-4, pseudocount=1e-6):
+
+        n_states = len(self.states)
+
+        emission_symbols = sorted(self.emissions)
+        emission_to_idx = {}
+        for i, symbol in enumerate(emission_symbols):
+            emission_to_idx[symbol] = i
+
+        history = []
+        prev_loglik = float("-inf")
+
+        for iteration in range(max_iter):
+
+            beta_counts = np.zeros(n_states)
+            trans_counts = np.zeros((n_states, n_states))
+            trans_denom = np.zeros(n_states)
+            emit_counts = np.zeros((n_states, len(emission_symbols)))
+            emit_denom = np.zeros(n_states)
+
+            total_loglik = 0.0
+
+            # -------- E-STEP --------
+            for observations in sequences:
+
+                observations = list(observations)
+
+                _, _, log_prob, gamma, xi = self._expectation_values(observations)
+
+                total_loglik += log_prob
+
+                beta_counts += gamma[:, 0]
+
+                trans_counts += np.sum(xi, axis=0)
+                trans_denom += np.sum(gamma[:, :-1], axis=1)
+
+                for t in range(len(observations)):
+                    obs = observations[t]
+                    obs_idx = emission_to_idx[obs]
+                    emit_counts[:, obs_idx] += gamma[:, t]
+
+                emit_denom += np.sum(gamma, axis=1)
+
+            # -------- M-STEP --------
+
+            # update initial probs
+            beta_total = np.sum(beta_counts) + pseudocount * n_states
+            for i in range(n_states):
+                self.betas[self.states[i]] = (beta_counts[i] + pseudocount) / beta_total
+
+            # update transitions
+            for i in range(n_states):
+                denom = trans_denom[i] + pseudocount * n_states
+                for j in range(n_states):
+                    prob = (trans_counts[i, j] + pseudocount) / denom
+                    self.t_mat[i, j] = prob
+                    self.states[i].transitions[self.states[j].name] = prob
+
+            # update emissions
+            for i in range(n_states):
+                denom = emit_denom[i] + pseudocount * len(emission_symbols)
+                for symbol in emission_symbols:
+                    k = emission_to_idx[symbol]
+                    prob = (emit_counts[i, k] + pseudocount) / denom
+                    self.states[i].emission_probs[symbol] = prob
+
+            history.append(total_loglik)
+
+            # convergence check
+            if len(history) > 1:
+                if abs(total_loglik - prev_loglik) < tol:
+                    break
+
+            prev_loglik = total_loglik
+
+        return history
 
 
 if __name__ == "__main__":
@@ -300,3 +454,4 @@ if __name__ == "__main__":
     log_prob_bk = np.logaddexp.reduce(bkmat[:, 0])
     print("log_P from forward: ", log_prob_fw)
     print("log_P from backward:", log_prob_bk)
+
