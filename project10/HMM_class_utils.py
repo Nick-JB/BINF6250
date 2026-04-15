@@ -3,7 +3,7 @@ from numbers import Number
 from collections.abc import Iterable
 from math import log
 
-from project09.HMM_notebook import backward_mat
+#from project09.HMM_notebook import backward_mat
 
 
 class State:
@@ -55,7 +55,7 @@ class HMM():
         self._synchronize_emission()
 
     def __repr__(self):
-        return (f"{self.name}\n{self.emissions}\n{self.states}\n{self.t_mat}\n{self.betas}")
+        return (f"Name\n{self.name}\nAlphabet\n{self.emissions}\nStates\n{self.states}\nTransitions\n{self.t_mat}\nInitials\n{self.betas}")
 
 
     @staticmethod
@@ -423,7 +423,8 @@ class HMM():
                     break
 
             prev_loglik = total_loglik
-
+        print(self)
+        
         return history
 
 
@@ -454,4 +455,9 @@ if __name__ == "__main__":
     log_prob_bk = np.logaddexp.reduce(bkmat[:, 0])
     print("log_P from forward: ", log_prob_fw)
     print("log_P from backward:", log_prob_bk)
+
+    observations = ["ABCBCBCABB", "CCCBCABCABC"]
+
+    print("BAUM-WELCH OUTPUT")
+    my_HMM.baum_welch(observations)
 
