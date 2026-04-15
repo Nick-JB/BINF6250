@@ -176,8 +176,8 @@ Description of the stumbling blocks the team experienced
 ## Group Leader
 Group leader's reflection on the project
 
-## Other member
-Other members' reflections on the project
+## Tien Nguyen
+I found the Baum–Welch algorithm challenging to grasp at first, particularly the idea of learning hidden state behavior without directly observing it. While the overall algorithm felt abstract, the gamma and xi computations were more concrete and easier to implement. As I connected these computations back to the E-step, I began to understand how the model uses probabilities instead of fixed paths to learn from the data. This process helped me develop a deeper understanding of how expectation-based methods work in probabilistic models.
 
 # Generative AI Appendix
-As per the syllabus
+CHATGPT was used to explain the Baum–Welch algorithm, assist with pseudocode planning, and support debugging throughout the implementation process.

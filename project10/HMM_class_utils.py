@@ -3,7 +3,7 @@ from numbers import Number
 from collections.abc import Iterable
 from math import log
 
-from project09.HMM_notebook import backward_mat
+#from project09.HMM_notebook import backward_mat
 
 
 class State:
@@ -14,7 +14,9 @@ class State:
         self.emission_probs = dict(zip(emissions, probabilities))  # Create state emission: probabilities pairs from input
         self.transitions = transitions
         self.total_emission_prob = sum(probabilities)  # Save sum of emission probabilities
-        if self.total_emission_prob != 1:  # Confirm emission probabilities sum to 1, else raise error
+        self.total_emission_prob = sum(probabilities)
+        # Confirm emission probabilities sum to 1, else raise error
+        if not np.isclose(self.total_emission_prob, 1.0):
             raise ValueError("Emission probabilities do not sum to 1")
 
     def __repr__(self):
@@ -142,8 +144,12 @@ class HMM():
             list: list of potential path probabilities
         """
         # For each possible path probability into the given state at the current observation store that cumulative probability in a list of paths
-        options = [state_row[obs-1] + log(self.t_mat[trans_state][mat_row]) + log(self.states[mat_row].emission_probs[observations[obs]])
-                   for trans_state, state_row in enumerate(mat)]
+        options = [
+            mat[trans_state][obs - 1]
+            + self._safe_log(self.t_mat[trans_state][mat_row])
+            + self._safe_log(self.states[mat_row].emission_probs[observations[obs]])
+            for trans_state in range(len(self.states))
+        ]
 
         return options
 
@@ -240,8 +246,12 @@ class HMM():
             list: list of cumulative path probabilities up to current row and position
         """
         # For each possible sum of current path probability, transition probability, and emission probability, create a corresponding element in a list of path options
-        options = [log(self.t_mat[mat_row][state]) + log(self.states[state].emission_probs[observations[obs_ind]]) + mat[state][obs_ind]
-                   for state, row in enumerate(mat)]
+        options = [
+            self._safe_log(self.t_mat[mat_row][next_state])
+            + self._safe_log(self.states[next_state].emission_probs[observations[obs_ind]])
+            + mat[next_state][obs_ind]
+            for next_state in range(len(self.states))
+        ]
 
         return options
 
@@ -287,14 +297,14 @@ class HMM():
         # Calculate the log
         log_prob = np.logaddexp.reduce(forward_mat[:, -1])
 
-        # Create posterier matrix
-        posterier_mat = forward_mat + backward_mat - log_prob
+        # Create posterior matrix
+        posterior_mat = forward_mat + backward_mat - log_prob
 
         # Determine the most likely state at a given position
-        state_idx = np.argmax(posterier_mat, axis=0)
+        state_idx = np.argmax(posterior_mat, axis=0)
         state_path = [self.states[i] for i in state_idx]
 
-        return posterier_mat, state_path
+        return posterior_mat, state_path
 
     def _expectation_values(self, observations: Iterable):
         "Compute shared E-step quantities for one sequence."
@@ -454,4 +464,61 @@ if __name__ == "__main__":
     log_prob_bk = np.logaddexp.reduce(bkmat[:, 0])
     print("log_P from forward: ", log_prob_fw)
     print("log_P from backward:", log_prob_bk)
+
+    # --- Assignment example for Baum-Welch ---
+    obs = ["GGCACTGAA", "ATGCAATGC", "AATGCCTGA"]
+    sequences = [list(seq) for seq in obs]
+
+    state_H = State(
+        name="H",
+        emissions=["A", "C", "G", "T"],
+        probabilities=[0.2, 0.3, 0.3, 0.2],
+        transitions={"H": 0.6, "L": 0.4}
+    )
+
+    state_L = State(
+        name="L",
+        emissions=["A", "C", "G", "T"],
+        probabilities=[0.3, 0.2, 0.2, 0.3],
+        transitions={"H": 0.3, "L": 0.7}
+    )
+
+    my_HMM = HMM(
+        name="GC_Model",
+        betas={state_H: 0.5, state_L: 0.5},
+        emissions={"A", "C", "G", "T"},
+        states=[state_H, state_L]
+    )
+
+    print("\n--- Initial Parameters ---")
+    print("Initial betas:")
+    for state in my_HMM.states:
+        print(state.name, my_HMM.betas[state])
+
+    print("\nInitial transition matrix:")
+    print(my_HMM.t_mat)
+
+    print("\nInitial emission probabilities:")
+    for state in my_HMM.states:
+        print(state.name, state.emission_probs)
+
+    history = my_HMM.baum_welch(sequences, max_iter=20, tol=1e-4, pseudocount=1e-6)
+
+    print("\n--- Baum-Welch Log-Likelihood History ---")
+    print(history)
+
+    print("\n--- Updated Parameters After Baum-Welch ---")
+    print("Updated betas:")
+    for state in my_HMM.states:
+        print(state.name, my_HMM.betas[state])
+
+    print("\nUpdated transition matrix:")
+    print(my_HMM.t_mat)
+
+    print("\nUpdated emission probabilities:")
+    for state in my_HMM.states:
+        print(state.name, state.emission_probs)
+
+    print(sum(my_HMM.states[0].emission_probs.values()))
+    print(sum(my_HMM.states[1].emission_probs.values()))
 
