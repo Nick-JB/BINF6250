@@ -176,11 +176,11 @@ One of the primary challenges we faced was understanding the underlying concepts
 ## Group Leader
 Group leader's reflection on the project
 
-## Other member
-Other members' reflections on the project
+## Tien Nguyen
+I found the Baum–Welch algorithm challenging to grasp at first, particularly the idea of learning hidden state behavior without directly observing it. While the overall algorithm felt abstract, the gamma and xi computations were more concrete and easier to implement. As I connected these computations back to the E-step, I began to understand how the model uses probabilities instead of fixed paths to learn from the data. This process helped me develop a deeper understanding of how expectation-based methods work in probabilistic models.
 
 ## Shameem Shahib
 This project helped solidify my understanding of HMMs and how the different algorithms work together. Implementing Baum-Welch made the connection between probability theory and practical machine learning much clearer, and I found it to be enriching to work alongside my group to reinforce my learning. Collaborating with the team was valuable, as it exposed me to different problem-solving approaches and helped clarify challenging concepts through discussion. Despite the initial confusion and conceptual roadblocks, I am happy with the final result we were able to come up with.
 
 # Generative AI Appendix
-As per the syllabus
+CHATGPT was used to explain the Baum–Welch algorithm, assist with pseudocode planning, and support debugging throughout the implementation process.
