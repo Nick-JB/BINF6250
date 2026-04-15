@@ -57,7 +57,7 @@ class HMM():
         self._synchronize_emission()
 
     def __repr__(self):
-        return (f"{self.name}\n{self.emissions}\n{self.states}\n{self.t_mat}\n{self.betas}")
+        return (f"Name\n{self.name}\nAlphabet\n{self.emissions}\nStates\n{self.states}\nTransitions\n{self.t_mat}\nInitials\n{self.betas}")
 
 
     @staticmethod
@@ -433,7 +433,8 @@ class HMM():
                     break
 
             prev_loglik = total_loglik
-
+        print(self)
+        
         return history
 
 

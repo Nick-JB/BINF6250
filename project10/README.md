@@ -167,10 +167,10 @@ To structure our work, we used Object-Oriented Programming (OOP). Having already
 ```
 
 # Successes
-Description of the team's learning points
+One of the major successes of this project was successfully integrating the Baum-Welch algorithm into our existing HMM framework. Because we had already implemented the Forward and Backward algorithms, we were able to directly integrate these components in the E-step, which reinforced our understanding of how these algorithms connect within the broader HMM pipeline. Another key success was our thorough learning process, which helped us learn from one another and set a solid foundation of understanding for us to work from. Additionally, despite our tight schedules as the end of the semester gets hectic, we were able to maintain frequent communication to keep each other up to date on any progress we made. Most importantly, we were able to effectively help each other learn and cross-validate each other’s logic. 
 
 # Struggles
-Description of the stumbling blocks the team experienced
+One of the primary challenges we faced was understanding the underlying concepts before implementation. We found that we needed to spend significant time working through the theory to fully grasp how the Forward and Backward algorithms contribute to expected counts. Rather than rushing into coding, we deliberately slowed down to ensure a solid conceptual foundation, which ultimately improved the correctness of our implementation but extended development time. Translating our concepts from formula to code also proved to be a confusing endeavor at first, but through our debugging, we were able to make sense of what needed to happen and how. Once we got over the conceptual hurdle, the code and testing were not as difficult.
 
 # Personal Reflections
 ## Group Leader
@@ -178,6 +178,9 @@ Group leader's reflection on the project
 
 ## Tien Nguyen
 I found the Baum–Welch algorithm challenging to grasp at first, particularly the idea of learning hidden state behavior without directly observing it. While the overall algorithm felt abstract, the gamma and xi computations were more concrete and easier to implement. As I connected these computations back to the E-step, I began to understand how the model uses probabilities instead of fixed paths to learn from the data. This process helped me develop a deeper understanding of how expectation-based methods work in probabilistic models.
+
+## Shameem Shahib
+This project helped solidify my understanding of HMMs and how the different algorithms work together. Implementing Baum-Welch made the connection between probability theory and practical machine learning much clearer, and I found it to be enriching to work alongside my group to reinforce my learning. Collaborating with the team was valuable, as it exposed me to different problem-solving approaches and helped clarify challenging concepts through discussion. Despite the initial confusion and conceptual roadblocks, I am happy with the final result we were able to come up with.
 
 # Generative AI Appendix
 CHATGPT was used to explain the Baum–Welch algorithm, assist with pseudocode planning, and support debugging throughout the implementation process.
