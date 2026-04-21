@@ -352,8 +352,8 @@ class ProfileHMM(HMM):
         return init_probs, trans_probs, emit_probs
 
 def main():
-    train_file = "phmm_train_motif1.fasta"
-    test_file = "phmm_test_sequences.fasta"
+    train_file = "C:/Users/botto/Documents/NU_26_Spring/BINF6250/11BINF6250/BINF6250/project11/data/phmm_train_motif1.fasta"
+    test_file = "C:/Users/botto/Documents/NU_26_Spring/BINF6250/11BINF6250/BINF6250/project11/data/phmm_test_sequences.fasta"
     alphabet = "ACDEFGHIKLMNPQRSTVWY"
 
     model = ProfileHMM(train_file, alphabet)

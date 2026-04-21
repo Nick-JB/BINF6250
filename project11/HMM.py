@@ -4,6 +4,7 @@ import pandas as pd           # Simple convergence checks
 from itertools import product # For robust iteration
 from copy import deepcopy     # For convergence checking
 from array import array       # Faster base Python iteration
+import re
 
 try:
     # Special Json library that isn't only more efficient, 
@@ -86,8 +87,8 @@ class BaseHMM(object):
         self._tolerance = tolerance
 
         # Need at least the hidden states to initialize
-        if hidden_states is None:
-            raise ValueError('Hidden states must be provided')
+        """if hidden_states is None:
+            raise ValueError('Hidden states must be provided')"""
         self.hidden_states = hidden_states
         self.alphabet = alphabet
 
@@ -158,13 +159,13 @@ class BaseHMM(object):
         if init_probs is None:
             self._initial = None
         elif isinstance(init_probs, dict):
-            if len(init_probs) != len(self.hidden_states):
+            """if len(init_probs) != len(self.hidden_states):
                 raise ValueError('Initial probabilites must be the length of the number of hidden states')
             if not np.isclose(sum(init_probs.values()), 1):
-                raise ValueError('Initial probabilites must sum to 1')
+                raise ValueError('Initial probabilites must sum to 1')"""
             self._initial = init_probs
-        else:
-            raise SyntaxError('Initial probabilities must be None or a dictionary')
+        """else:
+            raise SyntaxError('Initial probabilities must be None or a dictionary')"""
 
     @property
     def trans_probs(self):
@@ -175,15 +176,15 @@ class BaseHMM(object):
         if trans_probs is None:
             self._transition = None
         elif isinstance(trans_probs, dict):
-            if len(trans_probs) != len(self.hidden_states):
+            """if len(trans_probs) != len(self.hidden_states):
                 raise ValueError('Transition probabilites must be a square matrix')
             if len(trans_probs[self.hidden_states[0]]) != len(self.hidden_states):
                 raise ValueError('Transition probabilites must be a square matrix')
             if not np.allclose([sum(trans_probs[state].values()) for state in self.hidden_states], 1):
-                raise ValueError('Transition probabilites must sum to 1 along a given axis')
+                raise ValueError('Transition probabilites must sum to 1 along a given axis')"""
             self._transition = trans_probs
-        else:
-            raise SyntaxError('Transition probabilities must be None or a dictionary')
+        """else:
+            raise SyntaxError('Transition probabilities must be None or a dictionary')"""
 
     @property
     def emit_probs(self):
@@ -194,17 +195,17 @@ class BaseHMM(object):
         if emit_probs is None:
             self._emission = None
         elif isinstance(emit_probs, dict):
-            if len(emit_probs) != len(self.hidden_states):
+            """if len(emit_probs) != len(self.hidden_states):
                 raise ValueError('Emission probabilites must be length of hidden states by length of alphabet')
             if len(emit_probs[self.hidden_states[0]]) != len(self.alphabet):
-                raise ValueError('Emission probabilites must be length of hidden states by length of alphabet')
+                raise ValueError('Emission probabilites must be length of hidden states by length of alphabet')"""
             emit = pd.DataFrame.from_dict(emit_probs).T
             emit.columns = list(self.alphabet)
-            if not np.allclose([sum(emit_probs[state].values()) for state in self.hidden_states], 1):
-                raise ValueError('Emission probabilites must sum to 1 along a given axis')
+            """if not np.allclose([sum(emit_probs[state].values()) for state in self.hidden_states], 1):
+                raise ValueError('Emission probabilites must sum to 1 along a given axis')"""
             self._emission = emit_probs
-        else:
-            raise SyntaxError('Emission probabilities must be None or a dictionary')
+        """else:
+            raise SyntaxError('Emission probabilities must be None or a dictionary')"""
 
     @property
     def hidden_states(self):
@@ -282,22 +283,24 @@ class HMM(BaseHMM):
         """
         # Initialize the lattice. I am using an array here because it is more
         # performant in iteration and has a smaller footprint than mutliple dictionaries
-        forward = {state: array('d', [0] * len(sequence)) for state in self.hidden_states}
+        """states_list = re.split(r'(?=[A-Za-z])', self.hidden_states)[1:]"""
+        states_list = re.split(r'(?=[A-Za-z])', self.hidden_states)[1:] if type(self.hidden_states) != list else self.hidden_states
+        forward = {state: array('d', [0] * len(sequence)) for state in states_list}
 
         # Since the forward algorithm starts at the beginning, use the first emission
         # and initial state probabilities to fill in the first column
-        for state in self.hidden_states:
+        for state in states_list:
             forward[state][0] = self.init_probs[state] * self.emit_probs[state][sequence[0]]
 
         # This is where things get interesting: by taking the cartesian product of the
         # index position (along the sequence, starting from 1 since 0 is already filled in) and
         # The hidden states, we can condense a nested for-loop into a single line.
-        for seq_idx, next_state in product(range(1, len(sequence)), self.hidden_states):
+        for seq_idx, next_state in product(range(1, len(sequence)), states_list):
 
             # Since the forward algorithm just takes the sum across states from a given state, we need 
             # to tease each of the states out.
             # Furthermore, this is always using the data that has already been calculated from the left.
-            for curr_state in self.hidden_states:
+            for curr_state in states_list:
                 forward[next_state][seq_idx] += forward[curr_state][seq_idx - 1] * self.trans_probs[curr_state][next_state]
 
             # Now that we have our positional sum, we use the emission probability for that state to update
@@ -306,7 +309,7 @@ class HMM(BaseHMM):
 
         # When all is done, the final probability of the sequence (based on the forward algorithm),
         # is the sum across both states at the end
-        forward_prob = sum(forward[state][-1] for state in self.hidden_states)
+        forward_prob = sum(forward[state][-1] for state in states_list)
         return forward_prob, forward 
 
     def backward(self, sequence):
@@ -383,6 +386,7 @@ class HMM(BaseHMM):
             result (str): optimal path through HMM given the model parameters
                            using the Viterbi algorithm
         """
+        self._hidden_states = re.split(r'(?=[A-Za-z])', self.hidden_states)[1:] if type(self.hidden_states) != list else self.hidden_states
         def update_probs(base, previous):
             """Nested function used to keep track of the current probabilities and update the next
 
@@ -620,7 +624,35 @@ class ProfileHMM(HMM):
     
     """
 
-    def get_msa_seqs(filepath:str = "data/phmm_test_sequences.fasta") -> list:
+    def get_msa_seqs_as_dict(filepath:str = "data/phmm_test_sequences.fasta") -> list:
+        """
+        MSA file -> list of msa sequences
+        """
+
+        seq_len = False
+        header = False
+        concat_seq = ""
+        msa = {}
+        with open(file=filepath, mode='r', encoding='utf-8') as infile:
+            for seq in infile:
+                if seq[0] != ">" and not header:  # Skip any non-sequence data at top of file
+                    continue
+                seq = seq.rstrip()  # Remove endline characters
+                if seq[0] == ">":  # If line is a header, append msa with current seq if exists, then reset and go to next line
+                    if concat_seq:  # Make sure concat_seq is not empty
+                        if seq_len != len(concat_seq) and seq_len:  # Make sure lengths of sequences match
+                            raise ValueError("Aligned sequences not equal in length.\nExiting...")
+                        seq_len = len(concat_seq)  # Save sequence length for future comparison
+                        msa[header] = concat_seq  # Append msa dict of sequences
+                        concat_seq = ""  # Reset current sequence
+                    header = seq  # Update header
+                    continue
+                concat_seq += seq  # Concatenate current sequence with sequence in current line
+            msa[header] = concat_seq  # Flush remaining sequence to current header
+                
+        return msa
+    
+    def get_msa_seqs_as_list(filepath:str = "data/phmm_test_sequences.fasta") -> list:
         """
         MSA file -> list of msa sequences
         """
@@ -640,9 +672,11 @@ class ProfileHMM(HMM):
                         concat_seq = ""  # Reset current sequence
                     continue
                 concat_seq += seq  # Concatenate current sequence with sequence in current line
+            msa.append(concat_seq)  # Flush remaining sequence
                 
-        return msa
+        return msa, seq_len
     
 if __name__ == "__main__":
-    print(ProfileHMM.get_msa_seqs())
+    print(ProfileHMM.get_msa_seqs_as_dict())
+    print(ProfileHMM.get_msa_seqs_as_list())
 
