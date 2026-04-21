@@ -138,8 +138,12 @@ Description of the stumbling blocks the team experienced
 ## Group Leader
 Group leader's reflection on the project
 
-## Other member
-Other members' reflections on the project
+## Tien Nguyen
+I struggled to understand the provided HMM.py, especially how it was structured and how different components interacted. One of the main challenges was that hidden_states were represented as a string instead of a list, which made it less intuitive to work with, particularly for multi-character states like M1 or D2. I decided to modify that part of HMM.py to store hidden_states as a list, which made the implementation clearer and easier to debug.
+
+I also found it difficult to translate the concept of a Profile HMM into code. Mapping alignment columns to match, insertion, and deletion states, and enforcing the correct transition structure required careful thinking and debugging.
+
+Overall, I feel relieved that we were able to figure it out to this point. We were not able to implement Baum–Welch due to time constraints, but I gained a much better understanding of how HMMs are constructed and applied in practice.
 
 # Generative AI Appendix
-As per the syllabus
+ChatGPT was used to explain the given HMM.py.
