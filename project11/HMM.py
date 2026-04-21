@@ -614,3 +614,35 @@ class HMM(BaseHMM):
             if self == old:
                 converged = True
                 print(f'Converged after {count} iterations')
+
+class ProfileHMM(HMM):
+    """Subclass of HMM objects for Profile HMM functionality
+    
+    """
+
+    def get_msa_seqs(filepath:str = "data/phmm_test_sequences.fasta") -> list:
+        """
+        MSA file -> list of msa sequences
+        """
+
+        seq_len = False
+        concat_seq = ""
+        msa = []
+        with open(file=filepath, mode='r', encoding='utf-8') as infile:
+            for seq in infile:
+                seq = seq.rstrip()  # Remove endline characters
+                if seq[0] == ">":  # If line is a header, append msa with current seq if exists, then reset and go to next line
+                    if concat_seq:  # Make sure concat_seq is not empty
+                        if seq_len != len(concat_seq) and seq_len:  # Make sure lengths of sequences match
+                            raise ValueError("Aligned sequences not equal in length.\nExiting...")
+                        seq_len = len(concat_seq)
+                        msa.append(concat_seq)  # Append msa list of sequences
+                        concat_seq = ""  # Reset current sequence
+                    continue
+                concat_seq += seq  # Concatenate current sequence with sequence in current line
+                
+        return msa
+    
+if __name__ == "__main__":
+    print(ProfileHMM.get_msa_seqs())
+
